@@ -1,58 +1,83 @@
-const express = require('express');
-const path = require('path');
-const notes = require("./db/db.json");
-
-const PORT = 3001;
+const express = require("express");
+const path = require("path");
+const fs = require("fs");
 
 const app = express();
+const PORT = process.env.PORT || 3000;
 
+app.use(express.urlencoded({extended: true}));
+app.use(express.static("public"));
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static('public'));
 
-app.get('/', (req, res) =>
-  res.sendFile(path.join(__dirname, '/public/index.html'))
-);
-app.get('/notes', (req, res) =>
-  res.sendFile(path.join(__dirname, '/public/notes.html'))
-);
-
-// GET request for notes
-app.get('/api/notes', (req, res) => {
-  res.status(200).json(notes);
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "/public/index.html"));
 });
 
-// POST request to add a note
-// NOTE: Data persistence isn't set up yet, so this will only exist in memory until we implement it
-app.post('/api/notes', (req, res) => {
-  // Log that a POST request was received
-  console.info(`${req.method} request received to add a review`);
-
-  // Destructuring assignment for the items in req.body
-  const { product, review, username } = req.body;
-
-  // If all the required properties are present
-  if (product && review && username) {
-    // Variable for the object we will save
-    const newReview = {
-      product,
-      review,
-      username,
-      review_id: uuid(),
-    };
-
-    const response = {
-      status: 'success',
-      body: newReview,
-    };
-
-    console.log(response);
-    res.status(201).json(response);
-  } else {
-    res.status(500).json('Error in posting notes);
-  }
+app.get("/notes", (req, res) => {
+    res.sendFile(path.join(__dirname, "/public/notes.html"));
 });
 
-app.listen(PORT, () =>
-  console.log(`App listening at http://localhost:${PORT} 🚀`)
-);
+app.get("/api/notes", (req, res) => {
+    fs.readFile(path.join(__dirname, "/db/db.json"), "utf8", (err, data) => {
+        if (err) throw err;
+        res.json(JSON.parse(data));
+    });
+});
+
+app.post("/api/notes", (req, res) => {
+    fs.readFile(path.join(__dirname, "/db/db.json"), "utf8", (err, data) => {
+        if (err) throw err;
+        const db = JSON.parse(data);
+        const newDB = [];
+
+        db.push(req.body);
+
+        for (let i = 0; i < db.length; i++)
+        {
+            const newNote = {
+                title: db[i].title,
+                text: db[i].text,
+                id: i
+            };
+
+            newDB.push(newNote);
+        }
+
+        fs.writeFile(path.join(__dirname, "/db/db.json"), JSON.stringify(newDB, null, 2), (err) => {
+            if (err) throw err;
+            res.json(req.body);
+        });
+    });
+});
+
+app.delete("/api/notes/:id", (req, res) => {
+    const id = parseInt(req.params.id);
+    fs.readFile(path.join(__dirname, "/db/db.json"), "utf8", (err, data) => {
+        if (err) throw err;
+        const db = JSON.parse(data);
+        const newDB = [];
+
+        for(let i = 0; i < db.length; i++)
+        {
+            if (i !== id)
+            {
+                const newNote = {
+                    title: db[i].title,
+                    text: db[i].text,
+                    id: newDB.length
+                };
+
+                newDB.push(newNote);
+            }
+        }
+
+        fs.writeFile(path.join(__dirname, "/db/db.json"), JSON.stringify(newDB, null, 2), (err) => {
+            if (err) throw err;
+            res.json(req.body);
+        });
+    });
+});
+
+app.listen(PORT, () => {
+    console.log(`App listening on PORT ${PORT}.`);
+})
