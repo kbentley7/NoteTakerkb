@@ -14,13 +14,15 @@ Create a functional Note Taker
 
 
 ### Installation
-Install inquirer and use node index.js to run the application.
+App is deployed to Heroku here: If choosing to use from terminal, open terminal and run
+node server.js
 ### Usage
-A professional README.md will be produced using the inquirer package and from the user's input on a command-line.
+EXPRESS Note Taker is intended to be used for anyone who needs a place to organize their tasks and thoughts.[Heroku Deployed App]()
 ### Contribution
 none
 ### Test-Instructions
 
 ### Contact-Information
-[Github Profile](https://github.com/kbentley7)
+[GitHub](https://github.com/kbentley7)
+
 kenmo8466@gmail.com
